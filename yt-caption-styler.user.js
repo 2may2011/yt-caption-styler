@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Caption Styler
 // @namespace    http://tampermonkey.net/
-// @version      5.0
+// @version      6.0
 // @description  Netflix-style captions with DM Sans
 // @author       Sebak
 // @match        https://www.youtube.com/*
@@ -35,28 +35,37 @@
       line-height: 1.5 !important;
       -webkit-font-smoothing: antialiased !important;
     }
+
+    /* Force the inner span container to center too */
+    .ytp-caption-window-rollup span,
+    .ytp-caption-window-bottom span {
+      text-align: center !important;
+      display: block !important;
+    }
   `);
 
   function centerCaptions() {
-    const captionWindows = document.querySelectorAll('.caption-window');
-    captionWindows.forEach(win => {
+    document.querySelectorAll('.caption-window').forEach(win => {
       win.style.setProperty('left', '50%', 'important');
       win.style.setProperty('transform', 'translateX(-50%)', 'important');
       win.style.setProperty('text-align', 'center', 'important');
       win.style.setProperty('width', '72%', 'important');
+      // Also kill any right/margin that YouTube sets
+      win.style.setProperty('right', 'auto', 'important');
+      win.style.setProperty('margin-left', '0', 'important');
     });
   }
 
-  // Aggressive observer - runs on every DOM mutation to prevent left drift
-  const observer = new MutationObserver(() => {
-    centerCaptions();
-  });
-
+  // Observer for DOM changes
+  const observer = new MutationObserver(() => centerCaptions());
   observer.observe(document.body, {
     childList: true,
     subtree: true,
     attributes: true,
     attributeFilter: ['style']
   });
+
+  // Interval as hard backup - runs every 100ms
+  setInterval(centerCaptions, 100);
 
 })();
